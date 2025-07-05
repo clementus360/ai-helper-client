@@ -7,35 +7,20 @@
 
 	import { sendMessage as apiSendMessage, getTasks, sendMessage } from '$lib/api';
 	import { getMessages } from '$lib/api'; // adjust if your import path differs
-	import type { Message as ApiMessageBase, GetTasksOptions } from '$lib/api/types';
 
-	// Extend ApiMessage to include optional tasks property
-	type ApiMessage = ApiMessageBase & { tasks?: Task[] };
 	import { loadTasks } from '$lib/stores/tasks';
 	import { fade, fly } from 'svelte/transition';
+	import type { GetTasksOptions, Message, Task } from '$lib/api/types';
 
 	export let isTransitioning: boolean;
 
-	interface Task {
-		id?: string;
-		title: string;
-		description: string;
-		status: string;
-		ai_suggested: boolean;
-		created_at: string;
-		session_id: string;
-		follow_up_due_at?: string;
-	}
-
-	interface Message {
-		id: string;
-		content: string;
+	type MessageWithExtras = Message & {
 		role: 'user' | 'assistant';
 		timestamp: Date;
-		tasks?: Task[]; // Add tasks to messages
-	}
+		tasks?: Task[];
+	};
 
-	let messages: Message[] = [];
+	let messages: MessageWithExtras[] = [];
 	let messageInput = '';
 	let chatContainer: HTMLElement;
 	let messagesContainer: HTMLElement;
@@ -106,7 +91,7 @@
 		}
 
 		try {
-			const MAX_TASK_DELAY = 10 * 1000;
+			const MAX_TASK_DELAY = 15 * 1000;
 
 			// Load both messages and tasks for this session
 			const [messagesResponse, tasksResponse] = await Promise.all([
@@ -116,36 +101,33 @@
 
 			if (currentChatId === chatId) {
 				// Map messages and associate tasks with assistant messages
-				const loadedMessages = messagesResponse.messages.map((msg: ApiMessage) => ({
-					id: msg.id || crypto.randomUUID(),
-					content: msg.content,
-					role: (msg.sender === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+				const loadedMessages: MessageWithExtras[] = messagesResponse.messages.map((msg) => ({
+					...msg,
+					role: msg.sender === 'user' ? 'user' : 'assistant',
 					timestamp: new Date(msg.created_at || new Date().toISOString()),
-					tasks: msg.tasks || [] // Include tasks if they come with the message
+					tasks: [] // placeholder, will fill below
 				}));
 
 				// If tasks weren't included in messages, associate them with assistant messages
 				// by finding tasks created around the same time as assistant messages
 				if (tasksResponse && Array.isArray(tasksResponse.tasks) && tasksResponse.tasks.length > 0) {
-					loadedMessages.forEach((message, index) => {
-						if (message.role === 'assistant' && (!message.tasks || message.tasks.length === 0)) {
-							// Find tasks created shortly after this message
-							const messageTime = message.timestamp.getTime();
+					loadedMessages.forEach((message) => {
+						if (message.role === 'assistant') {
 							const associatedTasks = (tasksResponse.tasks ?? [])
-								.map((task: any) => ({ ...task, session_id: task.session_id ?? '' }))
-								.filter((task: Task) => {
-									const taskTime = new Date(task.created_at).getTime();
-									return taskTime >= messageTime && taskTime <= messageTime + MAX_TASK_DELAY;
-								});
-
-							if (associatedTasks.length > 0) {
-								message.tasks = associatedTasks;
-							}
+								.filter((task) => task.message_id === message.id)
+								.map((task) => ({
+									...task,
+									session_id: task.session_id ?? ''
+								}));
+							message.tasks = associatedTasks;
 						}
 					});
 				}
 
 				messages = loadedMessages;
+
+				console.log('Loaded messages:', messages);
+				console.log('Loaded tasks:', tasksResponse.tasks);
 			}
 		} catch (error) {
 			console.error('Failed to load chat messages:', error);
@@ -163,11 +145,14 @@
 		const messageToSend = message.trim();
 		messageInput = '';
 
-		const userMsg: Message = {
+		const userMsg: MessageWithExtras = {
 			id: crypto.randomUUID(),
 			content: messageToSend,
 			role: 'user',
-			timestamp: new Date()
+			timestamp: new Date(),
+			user_id: '', // Set appropriately if you have the user id
+			sender: 'user',
+			session_id: chatId
 		};
 		messages = [...messages, userMsg];
 		isLoading = true;
@@ -183,7 +168,7 @@
 			});
 
 			// Create assistant message with tasks
-			const assistantMsg: Message = {
+			const assistantMsg: MessageWithExtras = {
 				id: crypto.randomUUID(),
 				content: response.ai_response ?? '(no response)',
 				role: 'assistant',
@@ -191,7 +176,10 @@
 				tasks: (response.action_items || []).map((task: any) => ({
 					...task,
 					session_id: task.session_id ?? ''
-				})) // Ensure session_id is always a string
+				})), // Ensure session_id is always a string
+				user_id: '', // Set appropriately if you have the user id
+				sender: 'ai',
+				session_id: chatId
 			};
 
 			messages = [...messages, assistantMsg];

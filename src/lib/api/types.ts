@@ -12,6 +12,7 @@ export interface Task {
     id?: string;                 // omitempty in Go
     user_id: string;
     goal_id?: string | null;     // nullable pointer in Go
+    message_id?: string | null; // nullable pointer in Go
     title: string;
     description: string;
     status: string;
