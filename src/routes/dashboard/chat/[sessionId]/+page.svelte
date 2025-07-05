@@ -125,9 +125,6 @@
 				}
 
 				messages = loadedMessages;
-
-				console.log('Loaded messages:', messages);
-				console.log('Loaded tasks:', tasksResponse.tasks);
 			}
 		} catch (error) {
 			console.error('Failed to load chat messages:', error);
@@ -185,6 +182,15 @@
 			messages = [...messages, assistantMsg];
 			messageInput = '';
 			await loadTasks();
+
+			const lastMessage = messages[messages.length - 1];
+			if (lastMessage?.role === 'assistant') {
+				const sessionTasks = await getTasks({ session_id: chatId });
+				const relatedTasks = Array.isArray(sessionTasks.tasks)
+					? sessionTasks.tasks.filter((task) => task.message_id === lastMessage.id)
+					: [];
+				lastMessage.tasks = relatedTasks;
+			}
 		} catch (error) {
 			console.error('Error sending message:', error);
 		} finally {
