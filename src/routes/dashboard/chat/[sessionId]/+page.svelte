@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { onMount, tick } from 'svelte';
-	import { User, Boat, ArrowUpRight, CheckCircle, Clock } from 'phosphor-svelte';
+	import { ArrowUpRight, CheckCircle, Clock } from 'phosphor-svelte';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 
@@ -106,7 +106,7 @@
 		}
 
 		try {
-			const MAX_TASK_DELAY = 30 * 1000;
+			const MAX_TASK_DELAY = 10 * 1000;
 
 			// Load both messages and tasks for this session
 			const [messagesResponse, tasksResponse] = await Promise.all([

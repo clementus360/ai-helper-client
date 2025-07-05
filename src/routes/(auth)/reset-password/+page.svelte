@@ -2,10 +2,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
 	import { supabase } from '$lib/supabaseClient';
 	import { Check, X, Eye, EyeSlash } from 'phosphor-svelte';
-	import AuthGuard from '$lib/components/AuthGuard.svelte';
 
 	let password = '';
 	let confirmPassword = '';
@@ -163,7 +161,7 @@
 					<button
 						type="button"
 						on:click={togglePasswordVisibility}
-						class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
+						class="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700"
 					>
 						{#if showPassword}
 							<EyeSlash weight="thin" class="h-5 w-5" />
@@ -186,7 +184,7 @@
 					<button
 						type="button"
 						on:click={toggleConfirmPasswordVisibility}
-						class="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
+						class="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700"
 					>
 						{#if showConfirmPassword}
 							<EyeSlash weight="thin" class="h-5 w-5" />
