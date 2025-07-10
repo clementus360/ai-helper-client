@@ -8,7 +8,7 @@
 	import { onMount } from 'svelte';
 
 	// Import your API handlers
-	import { updateTask, deleteTask as deleteTaskAPI } from '$lib/api';
+	import { updateTask, deleteTask as deleteTaskAPI, deleteSession } from '$lib/api';
 
 	import { chatSessions, loadSessions } from '$lib/stores/sessions';
 
@@ -122,6 +122,22 @@
 		}
 	}
 
+	async function handleDeleteSession(sessionId: string) {
+		const confirmed = confirm('Are you sure you want to delete this session?');
+		if (!confirmed) return;
+
+		try {
+			await deleteSession(sessionId);
+			await loadSessions(); // refresh session list
+			if (currentChatId === sessionId) {
+				currentChatId = null;
+				goto('/dashboard'); // fallback if deleted session is open
+			}
+		} catch (error) {
+			console.error('Failed to delete session:', error);
+		}
+	}
+
 	async function handleLogout() {
 		await signOut();
 		goto('/login');
@@ -160,7 +176,7 @@
 				<div class="mb-6 flex items-end justify-end">
 					<button
 						on:click={toggleLeftSidebar}
-						class="touch-manipulation rounded-full p-2 hover:bg-gray-700"
+						class="touch-manipulation rounded-full p-2 hover:bg-gray-900"
 					>
 						{#if isMobile}
 							<X class="h-5 w-5" weight="thin" />
@@ -174,14 +190,14 @@
 					<nav class="flex flex-col gap-2 text-sm">
 						<button
 							on:click={createNewChat}
-							class="flex cursor-pointer touch-manipulation items-center gap-2 rounded-md px-4 py-3 hover:bg-gray-700"
+							class="flex cursor-pointer touch-manipulation items-center gap-2 rounded-md px-4 py-3 hover:bg-gray-900"
 						>
 							<Plus class="h-5 w-5" weight="thin" />
 							<span>New Chat</span>
 						</button>
 						<a
 							href="/dashboard/tasks"
-							class="flex touch-manipulation items-center gap-2 rounded-md px-4 py-3 hover:bg-gray-700"
+							class="flex touch-manipulation items-center gap-2 rounded-md px-4 py-3 hover:bg-gray-900"
 						>
 							<CheckSquare class="h-5 w-5" weight="thin" />
 							<span>Tasks</span>
@@ -190,18 +206,24 @@
 
 					<div class="mt-6">
 						<p class="mb-2 text-xs text-gray-400">Recent Chats</p>
-						<div class="max-h-64 overflow-y-auto md:max-h-none">
+						<div class="flex max-h-64 flex-col overflow-y-auto md:max-h-none">
 							{#each $chatSessions as chat (chat.id)}
-								<button
-									on:click={() => chat.id && selectChat(chat.id)}
-									class={`
-										font-inter w-full cursor-pointer touch-manipulation truncate rounded-md px-4 py-2 text-left 
-										text-sm font-thin text-ellipsis text-gray-200 hover:bg-gray-700
-										${currentChatId === chat.id ? 'bg-gray-700' : ''}
-									`}
+								<div
+									class={`group flex items-center justify-between gap-2 rounded-sm px-3 hover:bg-gray-900 ${currentChatId === chat.id ? 'bg-gray-900' : ''}`}
 								>
-									{chat.title}
-								</button>
+									<button
+										on:click={() => chat.id && selectChat(chat.id)}
+										class={`flex-1 py-3 truncate text-left text-sm font-thin text-gray-200 ${currentChatId === chat.id ? 'font-normal text-white' : ''}`}
+									>
+										{chat.title}
+									</button>
+									<button
+										on:click={() => chat.id && handleDeleteSession(chat.id)}
+										class="invisible text-gray-500 group-hover:visible hover:text-red-400"
+									>
+										<Trash class="h-4 w-4" weight="thin" />
+									</button>
+								</div>
 							{/each}
 						</div>
 					</div>
@@ -211,7 +233,7 @@
 			{#if (isLeftSidebarOpen && !isMobile) || (isMobile && showMobileMenu)}
 				<button
 					on:click={handleLogout}
-					class="flex cursor-pointer touch-manipulation items-center gap-2 rounded-md px-4 py-3 text-sm hover:bg-gray-700"
+					class="flex cursor-pointer touch-manipulation items-center gap-2 rounded-md px-4 py-3 text-sm hover:bg-gray-900"
 				>
 					<Door class="h-5 w-5" weight="thin" />
 					<span>Logout</span>
@@ -226,14 +248,14 @@
 			>
 				<button
 					on:click={toggleLeftSidebar}
-					class="touch-manipulation rounded-full p-2 hover:bg-gray-700"
+					class="touch-manipulation rounded-full p-2 hover:bg-gray-900"
 				>
 					<List class="h-5 w-5" weight="thin" />
 				</button>
 				<h1 class="text-lg font-semibold">Dashboard</h1>
 				<button
 					on:click={toggleRightSidebar}
-					class="touch-manipulation rounded-full p-2 hover:bg-gray-700"
+					class="touch-manipulation rounded-full p-2 hover:bg-gray-900"
 				>
 					<CheckSquare class="h-5 w-5" weight="thin" />
 				</button>
@@ -269,7 +291,7 @@
 				{/if}
 				<button
 					on:click={toggleRightSidebar}
-					class="touch-manipulation rounded-full p-2 hover:bg-gray-700"
+					class="touch-manipulation rounded-full p-2 hover:bg-gray-900"
 				>
 					{#if isMobile}
 						<X class="h-5 w-5" weight="thin" />
@@ -291,7 +313,7 @@
 					{:else}
 						{#each relevantTasks as task (task.id)}
 							<div
-								class="flex touch-manipulation items-center justify-between rounded-md px-4 py-3 hover:bg-gray-700"
+								class="flex touch-manipulation items-center justify-between rounded-md px-4 py-3 hover:bg-gray-900"
 							>
 								<div class="flex min-w-0 flex-1 items-center gap-2">
 									<button
@@ -307,7 +329,7 @@
 									<button
 										type="button"
 										on:click={() => goto(`/dashboard/tasks/${task.id}`)}
-										class={`truncate bg-transparent border-none p-0 m-0 text-left cursor-pointer ${task.status === 'completed' ? 'text-gray-500 line-through' : ''}`}
+										class={`m-0 cursor-pointer truncate border-none bg-transparent p-0 text-left ${task.status === 'completed' ? 'text-gray-500 line-through' : ''}`}
 										style="background: none;"
 									>
 										{task.title}

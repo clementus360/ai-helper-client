@@ -5,12 +5,21 @@
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 
+	import Prism from 'prismjs';
+	// Import Prism theme and languages you want
+	import 'prismjs/themes/prism-tomorrow.css';
+	import 'prismjs/components/prism-json';
+	import 'prismjs/components/prism-python';
+	import 'prismjs/components/prism-javascript'; // Add more as needed
+	import 'prismjs/components/prism-csharp';
+
 	import { sendMessage as apiSendMessage, getTasks, sendMessage } from '$lib/api';
 	import { getMessages } from '$lib/api'; // adjust if your import path differs
 
 	import { loadTasks } from '$lib/stores/tasks';
 	import { fade, fly } from 'svelte/transition';
 	import type { GetTasksOptions, Message, Task } from '$lib/api/types';
+	import { loadSessions } from '$lib/stores/sessions';
 
 	export let isTransitioning: boolean;
 
@@ -33,6 +42,14 @@
 
 	$: chatId = $page.params.sessionId;
 
+	const renderer = new marked.Renderer();
+
+	renderer.code = ({ text, lang, escaped }) => {
+		const language = lang && Prism.languages[lang] ? lang : 'plaintext';
+		const highlighted = Prism.highlight(text, Prism.languages[language], language);
+		return `<pre class="language-${language}"><code class="language-${language}">${highlighted}</code></pre>`;
+	};
+
 	// Configure marked for better rendering
 	marked.setOptions({
 		breaks: true,
@@ -40,12 +57,12 @@
 	});
 
 	// Function to safely render markdown
-	function renderMarkdown(content: string): string {
+	async function renderMarkdown(content: string): Promise<string> {
 		try {
-			const html = marked.parse(content) as string;
+			const html = await marked.parse(content, { renderer });
 			return DOMPurify.sanitize(html);
 		} catch (error) {
-			console.error('Error rendering markdown:', error);
+			console.error('Markdown rendering failed:', error);
 			return content;
 		}
 	}
@@ -91,8 +108,6 @@
 		}
 
 		try {
-			const MAX_TASK_DELAY = 15 * 1000;
-
 			// Load both messages and tasks for this session
 			const [messagesResponse, tasksResponse] = await Promise.all([
 				getMessages(currentChatId),
@@ -127,7 +142,6 @@
 				messages = loadedMessages;
 			}
 		} catch (error) {
-			console.error('Failed to load chat messages:', error);
 			if (currentChatId === chatId) {
 				messages = [];
 			}
@@ -181,7 +195,11 @@
 
 			messages = [...messages, assistantMsg];
 			messageInput = '';
-			await loadTasks();
+
+			setTimeout(async () => {
+				await loadTasks();
+				await loadSessions();
+			}, 3000);
 
 			const lastMessage = messages[messages.length - 1];
 			if (lastMessage?.role === 'assistant') {
@@ -280,7 +298,11 @@
 							>
 								{#if shouldRenderAsMarkdown(message.content, message.role)}
 									<div class="markdown-content">
-										{@html renderMarkdown(message.content)}
+										{#await renderMarkdown(message.content) then html}
+											{@html html}
+										{:catch error}
+											<p class="text-sm text-red-500">Failed to render markdown</p>
+										{/await}
 									</div>
 								{:else}
 									<p class="whitespace-pre-wrap">{message.content}</p>
@@ -478,6 +500,7 @@
 	.line-clamp-2 {
 		overflow: hidden;
 		display: -webkit-box;
+		line-clamp: 2;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
 	}
@@ -519,22 +542,6 @@
 
 	.markdown-content :global(li) {
 		margin: 0.25em 0;
-	}
-
-	.markdown-content :global(code) {
-		background-color: rgba(0, 0, 0, 0.1);
-		padding: 0.2em 0.4em;
-		border-radius: 3px;
-		font-size: 0.9em;
-		font-family: 'Courier New', monospace;
-	}
-
-	.markdown-content :global(pre) {
-		background-color: rgba(0, 0, 0, 0.05);
-		padding: 1em;
-		border-radius: 6px;
-		overflow-x: auto;
-		margin: 0.5em 0;
 	}
 
 	.markdown-content :global(pre code) {
