@@ -268,7 +268,7 @@
 	}
 </script>
 
-<div class="flex h-full w-full flex-col justify-end py-4">
+<div class="flex h-full w-full flex-col justify-end p-4">
 	{#if isChatLoading}
 		<div class="flex h-full items-center justify-center text-gray-500">
 			<div class="flex flex-col items-center gap-2">
