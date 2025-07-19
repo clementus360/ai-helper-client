@@ -8,3 +8,54 @@
   --font-inter: 'Inter', sans-serif;
   --font-outfit: 'Outfit', sans-serif;
 }
+
+/* Add this to your global CSS or in a <style> tag in your main layout */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: rgba(255, 255, 255, 0.05);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.15);
+	border-radius: 4px;
+	backdrop-filter: blur(10px);
+	transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.25);
+}
+
+::-webkit-scrollbar-corner {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+/* Firefox */
+html {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.15) rgba(255, 255, 255, 0.05);
+}
+
+/* For specific containers that might need different styling */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: rgba(16, 185, 129, 0.3); /* Emerald tint */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: rgba(16, 185, 129, 0.5);
+}
+
+/* Make scrollbars more subtle on mobile */
+@media (max-width: 768px) {
+	::-webkit-scrollbar {
+		width: 4px;
+		height: 4px;
+	}
+}

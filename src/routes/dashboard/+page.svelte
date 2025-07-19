@@ -97,10 +97,10 @@
 <div class="mx-auto flex h-full max-w-4xl flex-col px-4 sm:px-6 lg:px-8">
 	<!-- Welcome Section -->
 	<div class="flex flex-1 flex-col items-center justify-center py-8 sm:py-12 lg:py-16">
-		<div class="w-full max-w-3xl space-y-4 text-center md:text-start sm:space-y-6">
+		<div class="w-full max-w-3xl space-y-4 text-center sm:space-y-6 md:text-start">
 			<div class="flex flex-col space-y-2 sm:space-y-3">
 				<h2
-					class={`font-outfit text-3xl font-semibold text-gray-800 transition-all duration-1000 ease-out sm:text-4xl lg:text-5xl ${
+					class={`font-outfit text-3xl font-semibold text-gray-300 transition-all duration-1000 ease-out sm:text-4xl lg:text-5xl ${
 						isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
 					}`}
 				>
@@ -113,7 +113,7 @@
 					>,
 				</h2>
 				<h2
-					class={`font-outfit text-3xl font-semibold text-gray-800 transition-all duration-1000 ease-out sm:text-4xl lg:text-5xl ${
+					class={`font-outfit text-3xl font-semibold text-gray-300 transition-all duration-1000 ease-out sm:text-4xl lg:text-5xl ${
 						isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
 					}`}
 					style="transition-delay: 400ms;"
@@ -122,7 +122,7 @@
 				</h2>
 			</div>
 			<p
-				class={`mx-auto sm:mx-0 max-w-2xl text-sm font-thin text-gray-500 transition-all duration-1000 ease-out sm:text-base ${
+				class={`mx-auto max-w-2xl text-sm font-thin text-gray-500 transition-all duration-1000 ease-out sm:mx-0 sm:text-base ${
 					isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
 				}`}
 				style="transition-delay: 600ms;"
@@ -138,8 +138,10 @@
 		<div class="mx-auto max-w-3xl">
 			<div
 				id="shared-input"
-				class={`relative rounded-lg border-[0.1rem] bg-white transition-all duration-1000 ease-out ${
-					isInputFocused ? 'border-emerald-400 shadow-lg shadow-emerald-100' : 'border-black'
+				class={`relative rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-1000 ease-out ${
+					isInputFocused
+						? 'border-emerald-400/50 bg-white/10 shadow-md shadow-emerald-500/10'
+						: 'border-white/10 hover:border-white/20'
 				} ${isTransitioning ? 'morph-out' : ''} ${
 					isLoaded ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-8 scale-95 opacity-0'
 				}`}
@@ -153,13 +155,12 @@
 					disabled={isTransitioning}
 					placeholder="Type your message here..."
 					rows="3"
-					class="w-full resize-none border-none bg-transparent p-3 pr-14 text-sm text-gray-800 placeholder-gray-500 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50 sm:p-4 sm:pr-16 sm:text-base"
+					class="w-full resize-none border-none bg-transparent p-3 pr-14 text-sm text-white placeholder-gray-400 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50 sm:p-4 sm:pr-16 sm:text-base"
 				></textarea>
-
 				<button
 					on:click={sendLocalMessage}
 					disabled={!messageInput.trim() || isTransitioning}
-					class="absolute right-3 bottom-3 rounded-xl bg-emerald-500 p-2 text-white transition-all duration-200 hover:scale-105 hover:bg-emerald-600 disabled:bg-gray-300 sm:right-4 sm:bottom-4"
+					class="absolute right-3 bottom-3 rounded-xl bg-emerald-500/90 p-2 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/25 disabled:bg-gray-600/50 disabled:hover:scale-100 sm:right-4 sm:bottom-4"
 				>
 					{#if isTransitioning}
 						<div
@@ -170,17 +171,21 @@
 					{/if}
 				</button>
 			</div>
-
 			<p
-				class={`mt-3 text-center text-xs text-gray-500 transition-all duration-1000 ease-out sm:text-sm ${
+				class={`mt-3 text-center text-xs text-gray-400 transition-all duration-1000 ease-out sm:text-sm ${
 					isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
 				}`}
 				style="transition-delay: 1000ms;"
 			>
-				Press <kbd class="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:px-2 sm:py-1">Enter</kbd> to
-				send,
-				<kbd class="rounded bg-gray-100 px-1.5 py-0.5 text-xs sm:px-2 sm:py-1">Shift + Enter</kbd> for
-				new line
+				Press <kbd
+					class="rounded-md border border-white/20 bg-white/10 px-1.5 py-0.5 text-xs text-gray-300 backdrop-blur-sm sm:px-2 sm:py-1"
+					>Enter</kbd
+				>
+				to send,
+				<kbd
+					class="rounded-md border border-white/20 bg-white/10 px-1.5 py-0.5 text-xs text-gray-300 backdrop-blur-sm sm:px-2 sm:py-1"
+					>Shift + Enter</kbd
+				> for new line
 			</p>
 		</div>
 	</div>
@@ -256,5 +261,50 @@
 		.flex-wrap button {
 			white-space: nowrap;
 		}
+	}
+
+	/* Add this to your <style> section */
+
+	.noise-overlay {
+		position: relative;
+	}
+
+	.noise-overlay::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: #000000;
+		background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.05"/></svg>');
+		background-size: 200px 200px;
+		opacity: 1;
+		pointer-events: none;
+		z-index: 1;
+		mix-blend-mode: screen; /* Use 'overlay' for a subtle effect */
+	}
+
+	/* Ensure content appears above overlay */
+	.noise-overlay > * {
+		position: relative;
+		z-index: 2;
+	}
+
+	/* Alternative: If you want to use an external noise image instead */
+	.noise-overlay-external::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-image: url('/path/to/your/noise-texture.png');
+		background-size: 300px 300px;
+		background-repeat: repeat;
+		opacity: 0.08;
+		pointer-events: none;
+		z-index: 1;
+		mix-blend-mode: overlay;
 	}
 </style>

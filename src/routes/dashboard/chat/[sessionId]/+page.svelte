@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { onMount, tick } from 'svelte';
-	import { ArrowUpRight, CheckCircle, Clock } from 'phosphor-svelte';
+	import { ArrowUpRight, CheckCircle, Clock, Copy, ArrowClockwise, Trash } from 'phosphor-svelte';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 
@@ -256,9 +256,19 @@
 	onMount(() => {
 		console.log('Chat component mounted');
 	});
+
+	async function copyToClipboard(text: string) {
+		try {
+			await navigator.clipboard.writeText(text);
+			// You could add a toast notification here
+			console.log('Copied to clipboard');
+		} catch (err) {
+			console.error('Failed to copy: ', err);
+		}
+	}
 </script>
 
-<div class="flex h-full w-full flex-col justify-end">
+<div class="flex h-full w-full flex-col justify-end py-4">
 	{#if isChatLoading}
 		<div class="flex h-full items-center justify-center text-gray-500">
 			<div class="flex flex-col items-center gap-2">
@@ -269,7 +279,7 @@
 	{:else}
 		<!-- Messages Container -->
 		<div bind:this={chatContainer} class="mb-8 flex w-full justify-center overflow-y-scroll">
-			<div bind:this={messagesContainer} class="max-w-3xl flex-1 space-y-4">
+			<div bind:this={messagesContainer} class="flex flex-col max-w-3xl flex-1 space-y-4 gap-4">
 				{#if messages.length === 0}
 					<div class="flex h-full items-center justify-center text-gray-500">
 						<p>Start a conversation by typing a message below.</p>
@@ -283,85 +293,118 @@
 							delay: message.role === 'assistant' ? 100 : 0
 						}}
 						use:setLastMessageRef={i === messages.length - 1}
-						class={`message-group flex flex-col gap-2 ${message.role === 'user' ? 'items-end' : 'items-start'}`}
+						class="message-group mx-auto mb-6 w-full max-w-4xl"
 					>
-						<!-- Message Bubble -->
+						<!-- Message Container -->
 						<div
-							class={`message flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+							class={`message-container group relative rounded-lg backdrop-blur-xl transition-all duration-200 ${
+								message.role === 'user'
+									? 'ml-12 bg-emerald-500/10'
+									: 'mr-12 bg-white/5'
+							}`}
 						>
-							<div
-								class={`message-bubble flex max-w-sm flex-col gap-2 rounded-xl px-4 py-2 lg:max-w-xl ${
-									message.role === 'user'
-										? 'rounded-br-none bg-emerald-600 text-white'
-										: 'rounded-bl-none border border-emerald-500 bg-emerald-50/20 text-gray-800'
-								}`}
-							>
+							<!-- Message Content -->
+							<div class="px-4 py-4">
 								{#if shouldRenderAsMarkdown(message.content, message.role)}
-									<div class="markdown-content">
+									<div class="markdown-content prose prose-invert prose-emerald max-w-none">
 										{#await renderMarkdown(message.content) then html}
 											{@html html}
 										{:catch error}
-											<p class="text-sm text-red-500">Failed to render markdown</p>
+											<p class="text-sm text-red-400">Failed to render markdown</p>
 										{/await}
 									</div>
 								{:else}
-									<p class="whitespace-pre-wrap">{message.content}</p>
+									<p class="leading-relaxed whitespace-pre-wrap text-white">{message.content}</p>
 								{/if}
-								<p
-									class={`mt-1 text-xs ${message.role === 'user' ? 'text-emerald-100' : 'text-gray-500'}`}
-								>
+							</div>
+
+							<!-- Tasks Section (only for assistant messages with tasks) -->
+							{#if message.role === 'assistant' && message.tasks && message.tasks.length > 0}
+								<div class="mt-3 px-4 pb-4">
+									<div class="mb-3 flex items-center gap-2">
+										<CheckCircle class="h-4 w-4 text-emerald-400" />
+										<span class="text-sm font-medium text-gray-300">Tasks created</span>
+									</div>
+									<div class="space-y-2">
+										{#each message.tasks as task}
+											<div
+												class="task-item rounded-md border border-white/10 bg-white/5 p-3 backdrop-blur-sm transition-all hover:border-emerald-400/30 hover:bg-white/10"
+												in:fly={{ y: 10, duration: 300, delay: 150 }}
+											>
+												<div class="flex items-start justify-between gap-2">
+													<div class="min-w-0 flex-1">
+														<h4 class="text-sm leading-tight font-medium text-white">
+															{task.title}
+														</h4>
+														<p class="mt-1 line-clamp-2 text-xs text-gray-400">
+															{task.description}
+														</p>
+													</div>
+													<div class="flex flex-shrink-0 items-center gap-2">
+														<div class="flex items-center gap-1">
+															<Clock class="h-3 w-3 text-gray-500" />
+															<span class="text-xs text-gray-400">
+																{task.status}
+															</span>
+														</div>
+														{#if task.id}
+															<a
+																href={getTaskUrl(task.id)}
+																class="text-xs font-medium text-emerald-400 transition-colors hover:text-emerald-300"
+															>
+																View
+															</a>
+														{/if}
+													</div>
+												</div>
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
+
+							<!-- Hover Actions and Timestamp -->
+							<div
+								class={`absolute -bottom-6 w-full left-4 flex items-center gap-2 transition-opacity duration-200 ${message.role === 'user' ? 'justify-end px-4':''}`}
+							>
+								<!-- Timestamp -->
+								<span class="text-xs text-gray-500">
 									{message.timestamp.toLocaleTimeString([], {
 										hour: '2-digit',
 										minute: '2-digit'
 									})}
-								</p>
+								</span>
+
+								<!-- Action Buttons -->
+								<div class="flex items-center gap-1">
+									<button
+										on:click={() => copyToClipboard(message.content)}
+										class="rounded-md p-1.5 text-gray-500 transition-colors hover:text-white"
+										title="Copy message"
+									>
+										<Copy class="h-3 w-3" />
+									</button>
+
+									<!-- {#if message.role === 'assistant'}
+										<button
+											on:click={() => regenerateMessage(message.id)}
+											class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-white/10 hover:text-white"
+											title="Regenerate response"
+										>
+											<ArrowClockwise class="h-3 w-3" />
+										</button>
+									{/if}
+
+									<button
+										on:click={() => deleteMessage(message.id)}
+										class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-white/10 hover:text-red-400"
+										title="Delete message"
+									>
+										<Trash class="h-3 w-3" />
+									</button> -->
+								</div>
 							</div>
 						</div>
-
-						<!-- Tasks Section (only for assistant messages with tasks) -->
-						{#if message.role === 'assistant' && message.tasks && message.tasks.length > 0}
-							<div class="tasks-container w-full max-w-sm lg:max-w-xl">
-								<div class="mb-2 flex items-center gap-2">
-									<CheckCircle class="h-4 w-4 text-emerald-500" />
-									<span class="text-sm font-medium text-gray-700">Tasks created</span>
-								</div>
-								<div class="space-y-2">
-									{#each message.tasks as task}
-										<div
-											class="task-item rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:border-emerald-300"
-											in:fly={{ y: 10, duration: 300, delay: 150 }}
-										>
-											<div class="flex items-start justify-between gap-2">
-												<div class="min-w-0 flex-1">
-													<h4 class="text-sm leading-tight font-medium text-gray-900">
-														{task.title}
-													</h4>
-													<p class="mt-1 line-clamp-2 text-xs text-gray-600">
-														{task.description}
-													</p>
-												</div>
-												<div class="flex flex-shrink-0 items-center gap-2">
-													<div class="flex items-center gap-1">
-														<Clock class="h-3 w-3 text-gray-400" />
-														<span class="text-xs text-gray-500">
-															{task.status}
-														</span>
-													</div>
-													{#if task.id}
-														<a
-															href={getTaskUrl(task.id)}
-															class="text-xs font-medium text-emerald-600 underline hover:text-emerald-700"
-														>
-															View
-														</a>
-													{/if}
-												</div>
-											</div>
-										</div>
-									{/each}
-								</div>
-							</div>
-						{/if}
 					</div>
 				{/each}
 
@@ -394,7 +437,7 @@
 	<div class="flex w-full justify-center">
 		<div
 			id="shared-input"
-			class={`relative mx-auto w-full max-w-3xl rounded-lg border-[0.1rem] bg-white transition-all duration-300 ${
+			class={`relative mx-auto w-full max-w-3xl rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all duration-300 hover:border-white/20 ${
 				isTransitioning ? 'morph-in' : ''
 			}`}
 		>
@@ -404,14 +447,13 @@
 				disabled={isLoading || isTransitioning}
 				placeholder="Type your message here..."
 				rows="2"
-				class="w-full resize-none border-none bg-transparent p-4 pr-16 text-gray-800 placeholder-gray-500 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50"
+				class="w-full resize-none border-none bg-transparent p-4 pr-16 text-white placeholder-gray-400 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50"
 			></textarea>
-
 			<!-- Send Button -->
 			<button
 				on:click={() => messageInput.trim() && sendChatMessage(messageInput)}
 				disabled={!messageInput.trim() || isLoading || isTransitioning}
-				class="absolute right-3 bottom-3 rounded-xl bg-emerald-500 p-2 text-white transition-colors duration-200 hover:bg-emerald-600 disabled:bg-gray-300"
+				class="absolute right-3 bottom-3 rounded-xl bg-emerald-500/90 p-2 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/25 disabled:bg-gray-600/50 disabled:hover:scale-100"
 			>
 				{#if isLoading || isTransitioning}
 					<div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>

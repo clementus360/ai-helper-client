@@ -145,7 +145,7 @@
 </script>
 
 <AuthGuard requireAuth={true}>
-	<div class="relative flex h-screen w-full bg-black text-white">
+	<div class="relative flex h-screen w-full bg-gray-900 text-white">
 		<!-- Mobile Menu Overlay -->
 		{#if isMobile && showMobileMenu}
 			<button
@@ -164,13 +164,13 @@
 		<!-- Left Sidebar -->
 		<aside
 			class={`
-				z-50 flex resize-x flex-col justify-between p-4 transition-all duration-300
-				${
-					isMobile
-						? `fixed top-0 left-0 h-full bg-black ${showMobileMenu ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'}`
-						: `${isLeftSidebarOpen ? 'w-64' : 'w-16'}`
-				}
-			`}
+		noise-overlay z-50 flex flex-col justify-between bg-black p-4 transition-all duration-300
+		${
+			isMobile
+				? `${showMobileMenu ? 'fixed w-64 translate-x-0' : 'hidden'} top-0 left-0 h-full`
+				: `${isLeftSidebarOpen ? 'w-64' : 'w-16'}`
+		}
+	`}
 		>
 			<div>
 				<div class="mb-6 flex items-end justify-end">
@@ -213,7 +213,7 @@
 								>
 									<button
 										on:click={() => chat.id && selectChat(chat.id)}
-										class={`flex-1 py-3 truncate text-left text-sm font-thin text-gray-200 ${currentChatId === chat.id ? 'font-normal text-white' : ''}`}
+										class={`flex-1 truncate py-3 text-left text-sm font-thin text-gray-200 ${currentChatId === chat.id ? 'font-normal text-white' : ''}`}
 									>
 										{chat.title}
 									</button>
@@ -265,11 +265,11 @@
 		<!-- Main Panel -->
 		<div
 			class={`
-			relative flex flex-1 flex-col overflow-hidden rounded-xl bg-gray-50 text-black
+			noise-overlay relative flex flex-1 flex-col overflow-hidden rounded-xl  text-black
 			${isMobile ? 'mt-16' : ''}
 		`}
 		>
-			<main class="flex-1 overflow-y-auto p-4 md:p-6">
+			<main class="flex-1 overflow-y-auto">
 				<slot />
 			</main>
 		</div>
@@ -277,13 +277,13 @@
 		<!-- Right Sidebar -->
 		<aside
 			class={`
-				flex resize-x flex-col p-4 text-white transition-all duration-300
-				${
-					isMobile
-						? `fixed top-16 right-0 z-40 h-full border-l border-gray-700 bg-black ${isRightSidebarOpen ? 'w-64 translate-x-0' : 'w-64 translate-x-full'}`
-						: `${isRightSidebarOpen ? 'w-64' : 'w-16'}`
-				}
-			`}
+		noise-overlay flex flex-col bg-black p-4 text-white transition-all duration-300
+		${
+			isMobile
+				? `${isRightSidebarOpen ? 'fixed w-64 translate-x-0' : 'hidden'} top-16 right-0 z-40 h-full border-l border-gray-700`
+				: `${isRightSidebarOpen ? 'w-64' : 'w-16'}`
+		}
+	`}
 		>
 			<div class="mb-6 flex items-center justify-between">
 				{#if isMobile && isRightSidebarOpen}
@@ -379,5 +379,50 @@
 	}
 	.z-50 {
 		z-index: 50;
+	}
+
+	/* Add this to your <style> section */
+
+	.noise-overlay {
+		position: relative;
+	}
+
+	.noise-overlay::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: #000000;
+		background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><defs><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.05"/></svg>');
+		background-size: 200px 200px;
+		opacity: 1;
+		pointer-events: none;
+		z-index: 1;
+		mix-blend-mode: screen; /* Use 'overlay' for a subtle effect */
+	}
+
+	/* Ensure content appears above overlay */
+	.noise-overlay > * {
+		position: relative;
+		z-index: 2;
+	}
+
+	/* Alternative: If you want to use an external noise image instead */
+	.noise-overlay-external::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-image: url('/path/to/your/noise-texture.png');
+		background-size: 300px 300px;
+		background-repeat: repeat;
+		opacity: 0.08;
+		pointer-events: none;
+		z-index: 1;
+		mix-blend-mode: overlay;
 	}
 </style>
