@@ -196,6 +196,8 @@
 			messages = [...messages, assistantMsg];
 			messageInput = '';
 
+			console.log(assistantMsg.tasks);
+
 			setTimeout(async () => {
 				await loadTasks();
 				await loadSessions();
@@ -266,6 +268,19 @@
 			console.error('Failed to copy: ', err);
 		}
 	}
+
+	function regenerateMessage(messageId: string) {
+		const message = messages.find((msg) => msg.id === messageId);
+
+		const userMessage = messages.find(
+			(msg) => msg.role === 'user' && msg.id === message?.user_message_id
+		);
+
+		console.log('Regenerating message:', userMessage);
+		if (userMessage) {
+			sendChatMessage(userMessage.content);
+		}
+	}
 </script>
 
 <div class="flex h-full w-full flex-col justify-end p-4">
@@ -279,7 +294,7 @@
 	{:else}
 		<!-- Messages Container -->
 		<div bind:this={chatContainer} class="mb-8 flex w-full justify-center overflow-y-scroll">
-			<div bind:this={messagesContainer} class="flex flex-col max-w-3xl flex-1 space-y-4 gap-4">
+			<div bind:this={messagesContainer} class="flex max-w-3xl flex-1 flex-col gap-4 space-y-4">
 				{#if messages.length === 0}
 					<div class="flex h-full items-center justify-center text-gray-500">
 						<p>Start a conversation by typing a message below.</p>
@@ -298,9 +313,7 @@
 						<!-- Message Container -->
 						<div
 							class={`message-container group relative rounded-lg backdrop-blur-xl transition-all duration-200 ${
-								message.role === 'user'
-									? 'ml-12 bg-emerald-500/10'
-									: 'mr-12 bg-white/5'
+								message.role === 'user' ? 'ml-12 bg-emerald-500/10' : 'mr-12 bg-white/5'
 							}`}
 						>
 							<!-- Message Content -->
@@ -347,14 +360,12 @@
 																{task.status}
 															</span>
 														</div>
-														{#if task.id}
-															<a
-																href={getTaskUrl(task.id)}
-																class="text-xs font-medium text-emerald-400 transition-colors hover:text-emerald-300"
-															>
-																View
-															</a>
-														{/if}
+														<a
+															href={getTaskUrl(task?.id ?? '')}
+															class="text-xs font-medium text-emerald-400 transition-colors hover:text-emerald-300"
+														>
+															View
+														</a>
 													</div>
 												</div>
 											</div>
@@ -365,7 +376,7 @@
 
 							<!-- Hover Actions and Timestamp -->
 							<div
-								class={`absolute -bottom-6 w-full left-4 flex items-center gap-2 transition-opacity duration-200 ${message.role === 'user' ? 'justify-end px-4':''}`}
+								class={`absolute -bottom-6 left-4 flex w-full items-center gap-2 transition-opacity duration-200 ${message.role === 'user' ? 'justify-end px-4' : ''}`}
 							>
 								<!-- Timestamp -->
 								<span class="text-xs text-gray-500">
@@ -385,9 +396,9 @@
 										<Copy class="h-3 w-3" />
 									</button>
 
-									<!-- {#if message.role === 'assistant'}
+									{#if message.role === 'assistant'}
 										<button
-											on:click={() => regenerateMessage(message.id)}
+											on:click={() => regenerateMessage(message.id ?? '')}
 											class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-white/10 hover:text-white"
 											title="Regenerate response"
 										>
@@ -395,7 +406,7 @@
 										</button>
 									{/if}
 
-									<button
+									<!-- <button
 										on:click={() => deleteMessage(message.id)}
 										class="rounded-md p-1.5 text-gray-500 transition-colors hover:bg-white/10 hover:text-red-400"
 										title="Delete message"

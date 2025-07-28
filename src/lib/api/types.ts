@@ -6,6 +6,7 @@ export interface Message {
     content: string;
     created_at?: string;         // omitempty in Go, time.Time -> string in JSON
     session_id: string;
+    user_message_id?: string
 }
 
 export interface Task {
