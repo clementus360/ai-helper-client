@@ -21,6 +21,8 @@
 	import type { GetTasksOptions, Message, Task } from '$lib/api/types';
 	import { loadSessions } from '$lib/stores/sessions';
 
+	import Toast from '$lib/components/Toast.svelte';
+
 	export let isTransitioning: boolean;
 
 	type MessageWithExtras = Message & {
@@ -41,6 +43,15 @@
 	let lastMessageCount = 0;
 
 	$: chatId = $page.params.sessionId;
+	$: toastMessage = '';
+
+	// function to show toast message
+	function showToast(message: string) {
+		toastMessage = message;
+		setTimeout(() => {
+			toastMessage = '';
+		}, 4000);
+	}
 
 	const renderer = new marked.Renderer();
 
@@ -212,6 +223,7 @@
 				lastMessage.tasks = relatedTasks;
 			}
 		} catch (error) {
+			showToast('Error sending message. Please try again.');
 			console.error('Error sending message:', error);
 		} finally {
 			isLoading = false;
@@ -264,6 +276,8 @@
 			await navigator.clipboard.writeText(text);
 			// You could add a toast notification here
 			console.log('Copied to clipboard');
+
+			showToast('Message copied to clipboard');
 		} catch (err) {
 			console.error('Failed to copy: ', err);
 		}
@@ -284,6 +298,11 @@
 </script>
 
 <div class="flex h-full w-full flex-col justify-end p-4">
+	<!-- Toast notification -->
+	{#if toastMessage}
+		<Toast message={toastMessage} type="success" />
+	{/if}
+
 	{#if isChatLoading}
 		<div class="flex h-full items-center justify-center text-gray-500">
 			<div class="flex flex-col items-center gap-2">
