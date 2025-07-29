@@ -7,6 +7,7 @@
 	import AuthGuard from '$lib/components/AuthGuard.svelte';
 	import { onMount } from 'svelte';
 
+	import Image from "../../assets/favicon.svg"
 	// Import your API handlers
 	import { updateTask, deleteTask as deleteTaskAPI, deleteSession } from '$lib/api';
 
@@ -173,7 +174,11 @@
 	`}
 		>
 			<div>
-				<div class="mb-6 flex items-end justify-end">
+				<div class="mb-6 flex items-center justify-between">
+					{#if isLeftSidebarOpen}
+					<img color="white" src={Image} alt="Logo" class="h-8 w-8" />
+					{/if}
+					
 					<button
 						on:click={toggleLeftSidebar}
 						class="touch-manipulation rounded-full p-2 hover:bg-gray-900"
