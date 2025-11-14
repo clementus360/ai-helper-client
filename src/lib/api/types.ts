@@ -7,6 +7,7 @@ export interface Message {
     created_at?: string;         // omitempty in Go, time.Time -> string in JSON
     session_id: string;
     user_message_id?: string
+    model?: string;                     // omitempty in Go
 }
 
 export interface Task {
@@ -48,7 +49,8 @@ export interface SessionSummary {
 export interface ChatRequest {
     message: string;
     session_id?: string;         // omitempty in Go
-    force_new: boolean
+    force_new: boolean;
+    model?: 'chatgpt' | 'gemini'; // omitempty in Go
 }
 
 // API Response types matching Go structs exactly

@@ -15,6 +15,8 @@
 	let messageInput = '';
 	let isInputFocused = false;
 
+	let selectedModel: 'chatgpt' | 'gemini' = 'chatgpt';
+
 	const suggestions = [
 		'Help me plan a project timeline',
 		'Explain quantum computing in simple terms',
@@ -38,7 +40,8 @@
 		try {
 			const response = await sendMessage({
 				message,
-				force_new: true // Force new session for first message
+				force_new: true, // Force new session for first message
+				model: selectedModel
 			});
 
 			if (!response.success) {
@@ -155,8 +158,21 @@
 					disabled={isTransitioning}
 					placeholder="Type your message here..."
 					rows="3"
-					class="w-full resize-none border-none bg-transparent p-3 pr-14 text-sm text-white placeholder-gray-400 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50 sm:p-4 sm:pr-16 sm:text-base"
+					class="w-full resize-none border-none bg-transparent p-3 pr-28 text-sm text-white placeholder-gray-400 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50 sm:p-4 sm:pr-32 sm:text-base"
 				></textarea>
+
+				<!-- Model Selector Dropdown -->
+				<div class="absolute right-14 bottom-3 sm:right-16 sm:bottom-4">
+					<select
+						bind:value={selectedModel}
+						disabled={isTransitioning}
+						class="w-max rounded-lg border border-white/20 bg-white/10 px-2 py-1 text-xs text-white backdrop-blur-sm transition-all hover:bg-white/20 focus:border-emerald-400/50 focus:outline-none disabled:opacity-50 sm:pr-8 sm:pl-3 sm:py-1.5 sm:text-sm"
+					>
+						<option value="chatgpt" class="bg-gray-900">ChatGPT</option>
+						<option value="gemini" class="bg-gray-900">Gemini</option>
+					</select>
+				</div>
+
 				<button
 					on:click={sendLocalMessage}
 					disabled={!messageInput.trim() || isTransitioning}

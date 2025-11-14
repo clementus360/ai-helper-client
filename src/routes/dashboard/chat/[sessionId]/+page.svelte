@@ -42,6 +42,8 @@
 	let lastMessageEl: HTMLElement | null = null;
 	let lastMessageCount = 0;
 
+	let selectedModel: 'chatgpt' | 'gemini' = 'chatgpt';
+
 	$: chatId = $page.params.sessionId;
 	$: toastMessage = '';
 
@@ -186,7 +188,8 @@
 			const response = await apiSendMessage({
 				message: messageToSend,
 				session_id: chatId,
-				force_new: false
+				force_new: false,
+				model: selectedModel
 			});
 
 			// Create assistant message with tasks
@@ -477,8 +480,21 @@
 				disabled={isLoading || isTransitioning}
 				placeholder="Type your message here..."
 				rows="2"
-				class="w-full resize-none border-none bg-transparent p-4 pr-16 text-white placeholder-gray-400 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50"
+				class="w-full resize-none border-none bg-transparent p-4 pr-32 text-white placeholder-gray-400 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50"
 			></textarea>
+
+			<!-- Model Selector Dropdown -->
+			<div class="absolute right-14 bottom-3">
+				<select
+					bind:value={selectedModel}
+					disabled={isLoading || isTransitioning}
+					class="rounded-lg border border-white/20 bg-white/10 pl-3 pr-8 py-1.5 text-sm text-white backdrop-blur-sm transition-all hover:bg-white/20 focus:border-emerald-400/50 focus:outline-none disabled:opacity-50"
+				>
+					<option value="chatgpt" class="bg-gray-900">ChatGPT</option>
+					<option value="gemini" class="bg-gray-900">Gemini</option>
+				</select>
+			</div>
+
 			<!-- Send Button -->
 			<button
 				on:click={() => messageInput.trim() && sendChatMessage(messageInput)}
