@@ -315,7 +315,7 @@
 		</div>
 	{:else}
 		<!-- Messages Container -->
-		<div bind:this={chatContainer} class="mb-8 flex w-full justify-center overflow-y-scroll">
+		<div bind:this={chatContainer} class="pb-8 flex w-full justify-center overflow-y-scroll">
 			<div bind:this={messagesContainer} class="flex max-w-3xl flex-1 flex-col gap-4 space-y-4">
 				{#if messages.length === 0}
 					<div class="flex h-full items-center justify-center text-gray-500">
@@ -462,6 +462,8 @@
 						</div>
 					</div>
 				{/if}
+
+				<div class="min-h-4 w-24"></div>
 			</div>
 		</div>
 	{/if}
@@ -480,33 +482,36 @@
 				disabled={isLoading || isTransitioning}
 				placeholder="Type your message here..."
 				rows="2"
-				class="w-full resize-none border-none bg-transparent p-4 pr-32 text-white placeholder-gray-400 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50"
+				class="w-full resize-none border-none bg-transparent p-4 pb-2 text-white placeholder-gray-400 outline-none focus:border-transparent focus:ring-0 focus:outline-none disabled:opacity-50"
 			></textarea>
 
-			<!-- Model Selector Dropdown -->
-			<div class="absolute right-14 bottom-3">
-				<select
-					bind:value={selectedModel}
-					disabled={isLoading || isTransitioning}
-					class="rounded-lg border border-white/20 bg-white/10 pl-3 pr-8 py-1.5 text-sm text-white backdrop-blur-sm transition-all hover:bg-white/20 focus:border-emerald-400/50 focus:outline-none disabled:opacity-50"
-				>
-					<option value="chatgpt" class="bg-gray-900">ChatGPT</option>
-					<option value="gemini" class="bg-gray-900">Gemini</option>
-				</select>
-			</div>
+			<!-- Action buttons row -->
+			<div class="flex items-center justify-between px-4 pt-1 pb-3">
+				<!-- Model Selector Dropdown -->
+				<div>
+					<select
+						bind:value={selectedModel}
+						disabled={isLoading || isTransitioning}
+						class="rounded-lg border border-white/20 bg-white/10 py-1.5 pr-8 pl-3 text-sm text-white backdrop-blur-sm transition-all hover:bg-white/20 focus:border-emerald-400/50 focus:outline-none disabled:opacity-50"
+					>
+						<option value="chatgpt" class="bg-gray-900">ChatGPT</option>
+						<option value="gemini" class="bg-gray-900">Gemini</option>
+					</select>
+				</div>
 
-			<!-- Send Button -->
-			<button
-				on:click={() => messageInput.trim() && sendChatMessage(messageInput)}
-				disabled={!messageInput.trim() || isLoading || isTransitioning}
-				class="absolute right-3 bottom-3 rounded-xl bg-emerald-500/90 p-2 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/25 disabled:bg-gray-600/50 disabled:hover:scale-100"
-			>
-				{#if isLoading || isTransitioning}
-					<div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
-				{:else}
-					<ArrowUpRight class="h-5 w-5" />
-				{/if}
-			</button>
+				<!-- Send Button -->
+				<button
+					on:click={() => messageInput.trim() && sendChatMessage(messageInput)}
+					disabled={!messageInput.trim() || isLoading || isTransitioning}
+					class="rounded-xl bg-emerald-500/90 p-2 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/25 disabled:bg-gray-600/50 disabled:hover:scale-100"
+				>
+					{#if isLoading || isTransitioning}
+						<div class="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
+					{:else}
+						<ArrowUpRight class="h-5 w-5" />
+					{/if}
+				</button>
+			</div>
 		</div>
 	</div>
 </div>
